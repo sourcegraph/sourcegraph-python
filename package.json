@@ -1,0 +1,46 @@
+{
+  "name": "sourcegraph-python",
+  "title": "WIP: Python",
+  "description": "Python code intelligence",
+  "publisher": "sqs",
+  "activationEvents": [
+    "*"
+  ],
+  "contributes": {
+    "actions": [],
+    "menus": {
+      "editor/title": [],
+      "commandPalette": []
+    },
+    "configuration": {}
+  },
+  "version": "0.0.0-DEVELOPMENT",
+  "license": "MIT",
+  "main": "dist/sourcegraph-python.js",
+  "scripts": {
+    "prettier": "prettier '**/*.{js?(on),ts}' --write --list-different",
+    "tslint": "tslint -p tsconfig.json './src/**/*.ts'",
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "parcel build --out-file dist/sourcegraph-python.js src/sourcegraph-python.ts",
+    "serve": "parcel serve --no-hmr --out-file sourcegraph-python.js src/sourcegraph-python.ts",
+    "watch:typecheck": "tsc -p tsconfig.json -w",
+    "watch:build": "tsc -p tsconfig.dist.json -w",
+    "sourcegraph:prepublish": "npm run build"
+  },
+  "browserslist": [
+    "last 1 Chrome versions",
+    "last 1 Firefox versions",
+    "last 1 Edge versions",
+    "last 1 Safari versions"
+  ],
+  "devDependencies": {
+    "@sourcegraph/tsconfig": "^3.0.0",
+    "@sourcegraph/tslint-config": "^12.0.0",
+    "parcel-bundler": "^1.10.3",
+    "prettier": "^1.14.3",
+    "sourcegraph": "^18.0.1",
+    "tslint": "^5.11.0",
+    "tslint-language-service": "^0.9.9",
+    "typescript": "^3.1.3"
+  }
+}
