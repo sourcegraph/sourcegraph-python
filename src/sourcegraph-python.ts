@@ -17,8 +17,8 @@ import { LanguageServerConnectionManager } from './lsp'
 const ADDR = 'ws://localhost:4288'
 
 export function prepURI(uri: string | sourcegraph.URI): sourcegraph.URI {
-    // return new sourcegraph.URI(uri.toString())
-    return new sourcegraph.URI(
+    // return sourcegraph.URI.parse(uri.toString())
+    return sourcegraph.URI.parse(
         uri
             .toString()
             .replace('?', '/')
@@ -33,6 +33,8 @@ function unprepURI(uri: string | sourcegraph.URI): string {
         .replace('/fd3759', '?fd3759')
         .replace('b09b/', 'b09b#')
         .replace('/7e71', '?7e71')
+        .replace('a5384/', 'a5384#')
+        .replace('/ad924', '?ad924')
 }
 
 export async function activate(): Promise<void> {
@@ -54,7 +56,7 @@ export async function activate(): Promise<void> {
         await new Promise(resolve => setTimeout(resolve, 1000))
         const uris = await listFilesRecursively(
             sourcegraph.workspace.fileSystem,
-            new sourcegraph.URI(rootURI)
+            sourcegraph.URI.parse(rootURI)
         )
         for (const uri of uris) {
             if (
@@ -78,7 +80,7 @@ export async function activate(): Promise<void> {
     }
 
     sourcegraph.workspace.onDidOpenTextDocument.subscribe(async doc => {
-        const conn = await conns.getConnection(new sourcegraph.URI(doc.uri))
+        const conn = await conns.getConnection(sourcegraph.URI.parse(doc.uri))
         conn.sendNotification(DidOpenTextDocumentNotification.type, {
             textDocument: {
                 uri: prepURI(doc.uri).toString(),
@@ -91,7 +93,9 @@ export async function activate(): Promise<void> {
 
     sourcegraph.languages.registerHoverProvider(['python'], {
         provideHover: async (doc, pos) => {
-            const conn = await conns.getConnection(new sourcegraph.URI(doc.uri))
+            const conn = await conns.getConnection(
+                sourcegraph.URI.parse(doc.uri)
+            )
             const response = await conn.sendRequest(HoverRequest.type, {
                 textDocument: {
                     uri: prepURI(doc.uri).toString(),
@@ -110,7 +114,9 @@ export async function activate(): Promise<void> {
 
     sourcegraph.languages.registerDefinitionProvider(['python'], {
         provideDefinition: async (doc, pos) => {
-            const conn = await conns.getConnection(new sourcegraph.URI(doc.uri))
+            const conn = await conns.getConnection(
+                sourcegraph.URI.parse(doc.uri)
+            )
             const response = await conn.sendRequest(DefinitionRequest.type, {
                 textDocument: {
                     uri: prepURI(doc.uri).toString(),
@@ -123,7 +129,7 @@ export async function activate(): Promise<void> {
             return response
                 ? Array.isArray(response)
                     ? response.map(loc => ({
-                          uri: new sourcegraph.URI(unprepURI(loc.uri)),
+                          uri: sourcegraph.URI.parse(unprepURI(loc.uri)),
                           range: new sourcegraph.Range(
                               loc.range.start.line,
                               loc.range.start.character,
@@ -138,7 +144,9 @@ export async function activate(): Promise<void> {
 
     sourcegraph.languages.registerReferenceProvider(['python'], {
         provideReferences: async (doc, pos, context) => {
-            const conn = await conns.getConnection(new sourcegraph.URI(doc.uri))
+            const conn = await conns.getConnection(
+                sourcegraph.URI.parse(doc.uri)
+            )
             const response = await conn.sendRequest(ReferencesRequest.type, {
                 textDocument: {
                     uri: prepURI(doc.uri).toString(),
@@ -151,7 +159,7 @@ export async function activate(): Promise<void> {
             } as ReferenceParams)
             return response
                 ? response.map(loc => ({
-                      uri: new sourcegraph.URI(unprepURI(loc.uri)),
+                      uri: sourcegraph.URI.parse(unprepURI(loc.uri)),
                       range: new sourcegraph.Range(
                           loc.range.start.line,
                           loc.range.start.character,
@@ -169,12 +177,12 @@ async function listFilesRecursively(
     rootURI: sourcegraph.URI
 ): Promise<sourcegraph.URI[]> {
     const files: sourcegraph.URI[] = []
-    const toRecurse: sourcegraph.URI[] = [new sourcegraph.URI(`${rootURI}#`)]
+    const toRecurse: sourcegraph.URI[] = [sourcegraph.URI.parse(`${rootURI}#`)]
     while (toRecurse.length > 0) {
         const dir = toRecurse.shift()!
         const entries = await fs.readDirectory(dir)
         for (const [name, type] of entries) {
-            const uri = new sourcegraph.URI(
+            const uri = sourcegraph.URI.parse(
                 `${dir.toString()}${
                     dir.toString().endsWith('#') ? '' : '/'
                 }${name}`
