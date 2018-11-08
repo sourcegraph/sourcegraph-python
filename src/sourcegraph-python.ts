@@ -43,7 +43,7 @@ export async function activate(): Promise<void> {
             await conn.sendRequest(ExecuteCommandRequest.type, {
                 command: 'workspace/extractArchive',
                 arguments: [
-                    'https://codeload.github.com/sgtest/python-sample-0/zip/master',
+                    'https://codeload.github.com/pallets/flask/zip/339419117fff06fa89124d04b1921b61b8865d80',
                     true,
                 ],
             } as ExecuteCommandParams)
