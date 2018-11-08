@@ -1,6 +1,6 @@
 // tslint:disable-next-line:rxjs-no-wholesale
 import { combineLatest, Observable } from 'rxjs'
-import { map, startWith } from 'rxjs/operators'
+import { map, startWith, tap } from 'rxjs/operators'
 import * as sourcegraph from 'sourcegraph'
 import * as rpc from 'vscode-jsonrpc'
 import {
@@ -9,33 +9,18 @@ import {
     DidChangeConfigurationParams,
     DidOpenTextDocumentNotification,
     DidOpenTextDocumentParams,
+    ExecuteCommandParams,
+    ExecuteCommandRequest,
     HoverRequest,
     LogMessageNotification,
     ReferenceParams,
     ReferencesRequest,
     TextDocumentPositionParams,
 } from 'vscode-languageserver-protocol'
+import { createUriConverter, UriConverter } from './converters'
 import { LanguageServerConnectionManager } from './lsp'
 
 const ADDR = 'ws://localhost:4288'
-
-export function prepURI(uri: string | sourcegraph.URI): sourcegraph.URI {
-    return sourcegraph.URI.parse(
-        uri
-            .toString()
-            .replace(
-                'git://github.com/sgtest/python-sample-0?ad924954afa36439105efa03cce4c5981a2a5384#',
-                'file:///tmp/python-sample-0/'
-            )
-    )
-}
-
-function unprepURI(uri: string | sourcegraph.URI): string {
-    return (
-        'git://github.com/sgtest/python-sample-0?ad924954afa36439105efa03cce4c5981a2a5384#' +
-        uri.toString().replace('file:///tmp/python-sample-0/', '')
-    )
-}
 
 function fromSubscribable<T>(sub: {
     subscribe(next: (value?: T) => void): sourcegraph.Unsubscribable
@@ -48,11 +33,23 @@ function fromSubscribable<T>(sub: {
 export async function activate(): Promise<void> {
     const connectionManager = new LanguageServerConnectionManager(
         fromSubscribable(sourcegraph.workspace.onDidChangeRoots).pipe(
-            startWith(void 0),
+            // Only startWith a root if there are roots. Otherwise, there is no need to start, because when a root
+            // is present, the observable will emit.
+            sourcegraph.workspace.roots.length > 0 ? startWith(void 0) : tap(),
             map(() => sourcegraph.workspace.roots)
         ),
-        async (rootURI: string, conn: rpc.MessageConnection) => {
-            const prefix = `${rootURI}: `
+        async (originalRootUri, _actualRootUri, conn) => {
+            console.log('AAAAAAAAa')
+            await conn.sendRequest(ExecuteCommandRequest.type, {
+                command: 'workspace/extractArchive',
+                arguments: [
+                    'https://codeload.github.com/sgtest/python-sample-0/zip/master',
+                    true,
+                ],
+            } as ExecuteCommandParams)
+            console.log('BBBBBBBBBBB')
+
+            const prefix = `${originalRootUri}: `
             conn.onNotification(LogMessageNotification.type, params =>
                 console.info(prefix + params.message)
             )
@@ -108,16 +105,30 @@ export async function activate(): Promise<void> {
 
     async function getConnectionForDocument(
         doc: sourcegraph.TextDocument
-    ): Promise<rpc.MessageConnection> {
-        const rootURI = getWorkspaceRoot(doc.uri) || null
-        return connectionManager.get(rootURI)
+    ): Promise<{
+        uriConverter: UriConverter
+        connection: rpc.MessageConnection
+    }> {
+        const rootUri = getWorkspaceRoot(doc.uri) || null
+        if (!rootUri) {
+            throw new Error('root uri is not ready yet')
+        }
+        return connectionManager
+            .get(rootUri)
+            .then(({ actualRootUri, connection }) => ({
+                uriConverter: createUriConverter(rootUri, actualRootUri),
+                connection,
+            }))
     }
 
     sourcegraph.workspace.onDidOpenTextDocument.subscribe(async doc => {
-        const conn = await getConnectionForDocument(doc)
-        conn.sendNotification(DidOpenTextDocumentNotification.type, {
+        if (sourcegraph.workspace.roots.length === 0) {
+            return
+        }
+        const { uriConverter, connection } = await getConnectionForDocument(doc)
+        connection.sendNotification(DidOpenTextDocumentNotification.type, {
             textDocument: {
-                uri: prepURI(doc.uri).toString(),
+                uri: uriConverter.toLanguageServer(doc.uri),
                 languageId: doc.languageId,
                 text: doc.text,
                 version: 2,
@@ -127,10 +138,12 @@ export async function activate(): Promise<void> {
 
     sourcegraph.languages.registerHoverProvider(['python'], {
         provideHover: async (doc, pos) => {
-            const conn = await getConnectionForDocument(doc)
-            const response = await conn.sendRequest(HoverRequest.type, {
+            const { uriConverter, connection } = await getConnectionForDocument(
+                doc
+            )
+            const response = await connection.sendRequest(HoverRequest.type, {
                 textDocument: {
-                    uri: prepURI(doc.uri).toString(),
+                    uri: uriConverter.toLanguageServer(doc.uri),
                 },
                 position: {
                     line: pos.line,
@@ -146,20 +159,27 @@ export async function activate(): Promise<void> {
 
     sourcegraph.languages.registerDefinitionProvider(['python'], {
         provideDefinition: async (doc, pos) => {
-            const conn = await getConnectionForDocument(doc)
-            const response = await conn.sendRequest(DefinitionRequest.type, {
-                textDocument: {
-                    uri: prepURI(doc.uri).toString(),
-                },
-                position: {
-                    line: pos.line,
-                    character: pos.character,
-                },
-            } as TextDocumentPositionParams)
+            const { uriConverter, connection } = await getConnectionForDocument(
+                doc
+            )
+            const response = await connection.sendRequest(
+                DefinitionRequest.type,
+                {
+                    textDocument: {
+                        uri: uriConverter.toLanguageServer(doc.uri),
+                    },
+                    position: {
+                        line: pos.line,
+                        character: pos.character,
+                    },
+                } as TextDocumentPositionParams
+            )
             return response
                 ? Array.isArray(response)
                     ? response.map(loc => ({
-                          uri: sourcegraph.URI.parse(unprepURI(loc.uri)),
+                          uri: sourcegraph.URI.parse(
+                              uriConverter.toClient(loc.uri)
+                          ),
                           range: new sourcegraph.Range(
                               loc.range.start.line,
                               loc.range.start.character,
@@ -174,20 +194,27 @@ export async function activate(): Promise<void> {
 
     sourcegraph.languages.registerReferenceProvider(['python'], {
         provideReferences: async (doc, pos, context) => {
-            const conn = await getConnectionForDocument(doc)
-            const response = await conn.sendRequest(ReferencesRequest.type, {
-                textDocument: {
-                    uri: prepURI(doc.uri).toString(),
-                },
-                position: {
-                    line: pos.line,
-                    character: pos.character,
-                },
-                context,
-            } as ReferenceParams)
+            const { uriConverter, connection } = await getConnectionForDocument(
+                doc
+            )
+            const response = await connection.sendRequest(
+                ReferencesRequest.type,
+                {
+                    textDocument: {
+                        uri: uriConverter.toLanguageServer(doc.uri),
+                    },
+                    position: {
+                        line: pos.line,
+                        character: pos.character,
+                    },
+                    context,
+                } as ReferenceParams
+            )
             return response
                 ? response.map(loc => ({
-                      uri: sourcegraph.URI.parse(unprepURI(loc.uri)),
+                      uri: sourcegraph.URI.parse(
+                          uriConverter.toClient(loc.uri)
+                      ),
                       range: new sourcegraph.Range(
                           loc.range.start.line,
                           loc.range.start.character,

@@ -1,5 +1,4 @@
 // tslint:disable:rxjs-no-wholesale
-import { basename } from 'path'
 import {
     BehaviorSubject,
     from,
@@ -13,15 +12,23 @@ import { Unsubscribable } from 'sourcegraph'
 import * as rpc from 'vscode-jsonrpc'
 import {
     InitializedNotification,
+    InitializeError,
     InitializeParams,
-    InitializeRequest,
+    InitializeResult,
     MarkupKind,
 } from 'vscode-languageserver-protocol'
-import { prepURI } from './sourcegraph-python'
 import { createWebSocketMessageTransports } from './websocket'
 
 interface Entry {
-    rootURI: string
+    /** The root URI of the repository on Sourcegraph. */
+    originalRootUri: string | null
+
+    /**
+     * The root URI used by the server. The server automatically creates a temporary directory when the initialize
+     * request's rootUri is "tmp:"; in that case, actualRootUri is the file: URI to that temporary directory.
+     */
+    actualRootUri: Promise<string | null>
+
     connection: Promise<rpc.MessageConnection>
 }
 
@@ -32,7 +39,8 @@ export class LanguageServerConnectionManager implements Unsubscribable {
     constructor(
         roots: Subscribable<ReadonlyArray<sourcegraph.WorkspaceRoot>>,
         private prepareConn: (
-            rootURI: string,
+            originalRootUri: string | null,
+            actualRootUri: string | null,
             conn: rpc.MessageConnection
         ) => Promise<void>,
         private address: string
@@ -64,34 +72,36 @@ export class LanguageServerConnectionManager implements Unsubscribable {
 
         // Clean up connections.
         this.subscriptions.add(() => {
-            for (const { rootURI } of this.entries.value) {
-                this.removeConnection(rootURI)
+            for (const { originalRootUri } of this.entries.value) {
+                this.removeConnection(originalRootUri)
             }
             this.entries.next([])
         })
     }
 
-    private findEntry(rootURI: string): Entry | undefined {
-        return this.entries.value.find(e => e.rootURI === rootURI)
+    private findEntry(rootUri: string | null): Entry | undefined {
+        return this.entries.value.find(e => e.originalRootUri === rootUri)
     }
 
-    private removeEntry(rootURI: string): void {
-        this.entries.next(this.entries.value.filter(e => e.rootURI !== rootURI))
+    private removeEntry(rootUri: string | null): void {
+        this.entries.next(
+            this.entries.value.filter(e => e.originalRootUri !== rootUri)
+        )
     }
 
-    private removeConnection(rootURI: string): void {
-        const e = this.findEntry(rootURI)
+    private removeConnection(rootUri: string | null): void {
+        const e = this.findEntry(rootUri)
         if (!e) {
-            throw new Error(`no connection found with root URI ${rootURI}`)
+            throw new Error(`no connection found with root URI ${rootUri}`)
         }
-        this.removeEntry(rootURI)
+        this.removeEntry(rootUri)
         if (e) {
             e.connection
                 .then(c => c.dispose())
                 .catch(err =>
                     console.error(
                         `Error disposing Python language server connection for ${JSON.stringify(
-                            rootURI
+                            rootUri
                         )}:`,
                         err
                     )
@@ -111,26 +121,40 @@ export class LanguageServerConnectionManager implements Unsubscribable {
     /**
      * Returns the connection for the given root URI. If no connection exists yet, it is established.
      */
-    public async get(rootURI: string | null): Promise<rpc.MessageConnection> {
-        return (await this.findOrCreateEntry(rootURI)).connection
+    public async get(
+        rootUri: string | null
+    ): Promise<{
+        actualRootUri: string | null
+        connection: rpc.MessageConnection
+    }> {
+        const e = this.findOrCreateEntry(rootUri)
+        return {
+            actualRootUri: await e.actualRootUri,
+            connection: await e.connection,
+        }
     }
 
-    private async findOrCreateEntry(rootURI: string | null): Promise<Entry> {
-        rootURI = 'file:///tmp/python-sample-0' // TODO!(sqs)
-        let e = this.findEntry(rootURI)
+    private findOrCreateEntry(rootUri: string | null): Entry {
+        let e = this.findEntry(rootUri)
         if (!e) {
+            const connection = createWebSocketMessageTransports(
+                new WebSocket(this.address)
+            ).then(({ reader, writer }) => {
+                const c = rpc.createMessageConnection(reader, writer)
+                c.listen()
+                return initialize(c).then(({ rootUri: actualRootUri }) =>
+                    this.prepareConn(rootUri, actualRootUri, c).then(() => ({
+                        connection: c,
+                        actualRootUri,
+                    }))
+                )
+            })
             e = {
-                rootURI,
-                connection: createWebSocketMessageTransports(
-                    new WebSocket(this.address)
-                ).then(({ reader, writer }) => {
-                    const c = rpc.createMessageConnection(reader, writer)
-                    c.listen()
-                    initialize(prepURI(rootURI!).toString(), c) // TODO!(sqs)
-                        .then(() => this.prepareConn(rootURI!, c)) // TODO!(sqs)
-                        .then(() => c)
-                    return c
-                }),
+                originalRootUri: rootUri,
+                actualRootUri: connection.then(
+                    ({ actualRootUri }) => actualRootUri
+                ),
+                connection: connection.then(({ connection }) => connection),
             }
             this.entries.next([...this.entries.value, e])
             return e
@@ -143,20 +167,31 @@ export class LanguageServerConnectionManager implements Unsubscribable {
     }
 }
 
+interface InitializeResultWithRootUri extends InitializeResult {
+    rootUri: string | null
+}
+
+/**
+ * Extend LSP's InitializeRequest to add the rootUri field to the result. This is the URI to the temporary
+ * directory generated by the server (because we passed "tmp:" as the root URI).
+ */
+namespace InitializeRequest {
+    export const type = new rpc.RequestType<
+        InitializeParams,
+        InitializeResultWithRootUri,
+        InitializeError,
+        void
+    >('initialize')
+}
+
 async function initialize(
-    rootURI: string,
     conn: rpc.MessageConnection
-): Promise<void> {
-    await conn.sendRequest(InitializeRequest.type, {
+): Promise<InitializeResultWithRootUri> {
+    const result = await conn.sendRequest(InitializeRequest.type, {
         processId: null as any,
         documentSelector: [{ language: 'python' }],
-        rootUri: rootURI,
-        workspaceFolders: [
-            {
-                name: basename(rootURI),
-                uri: rootURI,
-            },
-        ],
+        rootUri: 'tmp:', // tells the server to make a new temp dir (and return its path in the initialize result)
+        workspaceFolders: [], // not used by python-language-server
         capabilities: {
             textDocument: {
                 hover: { contentFormat: [MarkupKind.Markdown] },
@@ -197,4 +232,5 @@ async function initialize(
         },
     } as InitializeParams)
     conn.sendNotification(InitializedNotification.type)
+    return result
 }
