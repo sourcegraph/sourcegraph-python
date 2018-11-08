@@ -1,5 +1,12 @@
-// tslint:disable-next-line:rxjs-no-wholesale
-import { from, Observable, Subscribable, Subscription } from 'rxjs'
+// tslint:disable:rxjs-no-wholesale
+import { basename } from 'path'
+import {
+    BehaviorSubject,
+    from,
+    Observable,
+    Subscribable,
+    Subscription,
+} from 'rxjs'
 import { bufferCount, map, startWith } from 'rxjs/operators'
 import * as sourcegraph from 'sourcegraph'
 import { Unsubscribable } from 'sourcegraph'
@@ -13,9 +20,14 @@ import {
 import { prepURI } from './sourcegraph-python'
 import { createWebSocketMessageTransports } from './websocket'
 
+interface Entry {
+    rootURI: string
+    connection: Promise<rpc.MessageConnection>
+}
+
 export class LanguageServerConnectionManager implements Unsubscribable {
     private subscriptions = new Subscription()
-    private conns = new Map<string, Promise<rpc.MessageConnection>>()
+    private entries = new BehaviorSubject<Entry[]>([])
 
     constructor(
         roots: Subscribable<ReadonlyArray<sourcegraph.WorkspaceRoot>>,
@@ -45,71 +57,85 @@ export class LanguageServerConnectionManager implements Unsubscribable {
 
                     for (const { uri } of roots) {
                         // It is safe to not handle the promise here, because all callers to getConnection will handle it.
-                        this.getOrCreateConnection(uri.toString())
+                        this.findOrCreateEntry(uri.toString())
                     }
                 })
         )
 
         // Clean up connections.
         this.subscriptions.add(() => {
-            for (const rootURI of this.conns.keys()) {
+            for (const { rootURI } of this.entries.value) {
                 this.removeConnection(rootURI)
             }
-            this.conns.clear()
+            this.entries.next([])
         })
     }
 
+    private findEntry(rootURI: string): Entry | undefined {
+        return this.entries.value.find(e => e.rootURI === rootURI)
+    }
+
+    private removeEntry(rootURI: string): void {
+        this.entries.next(this.entries.value.filter(e => e.rootURI !== rootURI))
+    }
+
     private removeConnection(rootURI: string): void {
-        const conn = this.conns.get(rootURI)
-        this.conns.delete(rootURI)
-        if (conn) {
-            conn.then(c => c.dispose()).catch(err =>
-                console.error(
-                    `Error disposing Python language server connection for ${JSON.stringify(
-                        rootURI
-                    )}:`,
-                    err
+        const e = this.findEntry(rootURI)
+        if (!e) {
+            throw new Error(`no connection found with root URI ${rootURI}`)
+        }
+        this.removeEntry(rootURI)
+        if (e) {
+            e.connection
+                .then(c => c.dispose())
+                .catch(err =>
+                    console.error(
+                        `Error disposing Python language server connection for ${JSON.stringify(
+                            rootURI
+                        )}:`,
+                        err
+                    )
                 )
-            )
         }
     }
 
-    public getConnection(uri: sourcegraph.URI): Promise<rpc.MessageConnection> {
-        // TODO!(sqs) HACK: chop off path to get root URI
-        const rootURI = 'file:///tmp/python-sample-0'
-        /// 'git://github.com/sgtest/python-sample-0/ad924954afa36439105efa03cce4c5981a2a5384' // uri.toString().replace(/#.*$/, '')
-        return this.getOrCreateConnection(rootURI)
+    /**
+     * An observable that emits when the set of connections changes.
+     */
+    public get connections(): Observable<Promise<rpc.MessageConnection>[]> {
+        return this.entries.pipe(
+            map(entries => entries.map(({ connection }) => connection))
+        )
     }
 
-    public getAll(): Promise<rpc.MessageConnection>[] {
-        return Array.from(this.conns.values())
+    /**
+     * Returns the connection for the given root URI. If no connection exists yet, it is established.
+     */
+    public async get(rootURI: string | null): Promise<rpc.MessageConnection> {
+        return (await this.findOrCreateEntry(rootURI)).connection
     }
 
-    public get connections():Observable<rpc.MessageConnection[]> { return this._entries.pipe(map(({connection})=>connection) }
-
-    private async getOrCreateConnection(
-        rootURI: string
-    ): Promise<rpc.MessageConnection> {
-        rootURI = 'file:///tmp/python-sample-0'
-        let conn = this.conns.get(rootURI)
-        if (!conn) {
-            console.log('CONNECTING TO', rootURI, 'existing:', [
-                ...this.conns.keys(),
-            ])
-            conn = createWebSocketMessageTransports(
-                new WebSocket(this.address)
-            ).then(({ reader, writer }) => {
-                const c = rpc.createMessageConnection(reader, writer)
-                c.listen()
-                conn = initialize(prepURI(rootURI).toString(), c)
-                    .then(() => this.prepareConn(rootURI, c))
-                    .then(() => c)
-                return conn
-            })
-            this.conns.set(rootURI, conn)
-            return conn
+    private async findOrCreateEntry(rootURI: string | null): Promise<Entry> {
+        rootURI = 'file:///tmp/python-sample-0' // TODO!(sqs)
+        let e = this.findEntry(rootURI)
+        if (!e) {
+            e = {
+                rootURI,
+                connection: createWebSocketMessageTransports(
+                    new WebSocket(this.address)
+                ).then(({ reader, writer }) => {
+                    const c = rpc.createMessageConnection(reader, writer)
+                    c.listen()
+                    initialize(prepURI(rootURI!).toString(), c) // TODO!(sqs)
+                        .then(() => this.prepareConn(rootURI!, c)) // TODO!(sqs)
+                        .then(() => c)
+                    return c
+                }),
+            }
+            this.entries.next([...this.entries.value, e])
+            return e
         }
-        return conn
+        return e
     }
 
     public unsubscribe(): void {
@@ -127,7 +153,7 @@ async function initialize(
         rootUri: rootURI,
         workspaceFolders: [
             {
-                name: rootURI.replace(/^[^/]+\/[^/]+$/, ''),
+                name: basename(rootURI),
                 uri: rootURI,
             },
         ],
@@ -166,7 +192,7 @@ async function initialize(
             ],
             excludeFiles: [],
             analysisUpdates: true,
-            traceLogging: true, // Max level, let LS decide through settings actual level of logging.
+            traceLogging: true,
             asyncStartup: true,
         },
     } as InitializeParams)
