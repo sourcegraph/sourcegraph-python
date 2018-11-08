@@ -1,6 +1,6 @@
 // tslint:disable-next-line:rxjs-no-wholesale
-import { from, Subscribable, Subscription } from 'rxjs'
-import { bufferCount, startWith } from 'rxjs/operators'
+import { from, Observable, Subscribable, Subscription } from 'rxjs'
+import { bufferCount, map, startWith } from 'rxjs/operators'
 import * as sourcegraph from 'sourcegraph'
 import { Unsubscribable } from 'sourcegraph'
 import * as rpc from 'vscode-jsonrpc'
@@ -76,25 +76,38 @@ export class LanguageServerConnectionManager implements Unsubscribable {
 
     public getConnection(uri: sourcegraph.URI): Promise<rpc.MessageConnection> {
         // TODO!(sqs) HACK: chop off path to get root URI
-        const rootURI =
-            'git://github.com/sgtest/python-sample-0?ad924954afa36439105efa03cce4c5981a2a5384' // uri.toString().replace(/#.*$/, '')
+        const rootURI = 'file:///tmp/python-sample-0'
+        /// 'git://github.com/sgtest/python-sample-0/ad924954afa36439105efa03cce4c5981a2a5384' // uri.toString().replace(/#.*$/, '')
         return this.getOrCreateConnection(rootURI)
     }
+
+    public getAll(): Promise<rpc.MessageConnection>[] {
+        return Array.from(this.conns.values())
+    }
+
+    public get connections():Observable<rpc.MessageConnection[]> { return this._entries.pipe(map(({connection})=>connection) }
 
     private async getOrCreateConnection(
         rootURI: string
     ): Promise<rpc.MessageConnection> {
+        rootURI = 'file:///tmp/python-sample-0'
         let conn = this.conns.get(rootURI)
         if (!conn) {
-            const { reader, writer } = await createWebSocketMessageTransports(
+            console.log('CONNECTING TO', rootURI, 'existing:', [
+                ...this.conns.keys(),
+            ])
+            conn = createWebSocketMessageTransports(
                 new WebSocket(this.address)
-            )
-            const c = rpc.createMessageConnection(reader, writer)
-            c.listen()
-            conn = initialize(prepURI(rootURI).toString(), c)
-                .then(() => this.prepareConn(rootURI, c))
-                .then(() => c)
+            ).then(({ reader, writer }) => {
+                const c = rpc.createMessageConnection(reader, writer)
+                c.listen()
+                conn = initialize(prepURI(rootURI).toString(), c)
+                    .then(() => this.prepareConn(rootURI, c))
+                    .then(() => c)
+                return conn
+            })
             this.conns.set(rootURI, conn)
+            return conn
         }
         return conn
     }
@@ -110,11 +123,11 @@ async function initialize(
 ): Promise<void> {
     await conn.sendRequest(InitializeRequest.type, {
         processId: null as any,
-        documentSelector: [{ language: 'python', scheme: 'git' }],
+        documentSelector: [{ language: 'python' }],
         rootUri: rootURI,
         workspaceFolders: [
             {
-                name: rootURI,
+                name: rootURI.replace(/^[^/]+\/[^/]+$/, ''),
                 uri: rootURI,
             },
         ],
@@ -133,7 +146,7 @@ async function initialize(
                         '/home/sqs/.pyenv/versions/3.7.1/bin/python',
                     Version: '3.7.1',
                     DatabasePath:
-                        '/home/sqs/src/github.com/Microsoft/vscode-python/languageServer.0.1.48',
+                        '/home/sqs/src/github.com/Microsoft/vscode-python/languageServer.0.1.482',
                 },
             },
             displayOptions: {
