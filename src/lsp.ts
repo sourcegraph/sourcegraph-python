@@ -211,11 +211,9 @@ async function initialize(
         initializationOptions: {
             interpreter: {
                 properties: {
-                    InterpreterPath:
-                        '/home/sqs/.pyenv/versions/3.7.1/bin/python',
+                    InterpreterPath: '/usr/local/bin/python',
                     Version: '3.7.1',
-                    DatabasePath:
-                        '/home/sqs/src/github.com/Microsoft/vscode-python/languageServer.0.1.482',
+                    DatabasePath: '/usr/local/python-language-server',
                 },
             },
             displayOptions: {
@@ -227,12 +225,9 @@ async function initialize(
             },
             testEnvironment: false,
             searchPaths: [
-                '/usr/lib/python3.7;/usr/lib/python3.7/plat-x86_64-linux-gnu;/usr/lib/python3.7/lib-tk;/usr/lib/python3.7/lib-old;/usr/lib/python3.7/lib-dynload;/home/sqs/.local/lib/python3.7/site-packages;/usr/local/lib/python3.7/dist-packages;/usr/lib/python3.7/dist-packages;/usr/lib/python3.7/dist-packages/gtk-2.0;',
-                '/usr/bin',
+                '/usr/lib/python3/dist-packages;/usr/local/lib/python3.7',
             ],
-            typeStubSearchPaths: [
-                '/home/sqs/src/github.com/Microsoft/vscode-python/languageServer.0.1.48/Typeshed',
-            ],
+            typeStubSearchPaths: ['/usr/local/python-language-server/Typeshed'],
             excludeFiles: [],
             analysisUpdates: true,
             traceLogging: true,

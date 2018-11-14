@@ -66,10 +66,15 @@ export async function activate(): Promise<void> {
 
                 const settings = sourcegraph.configuration.get<Settings>().value
                 const zipUrl = new URL(
-                    sourcegraph.internal.sourcegraphURL.toString()
+                    // TODO!(sqs): use sourcegraph.com bc it is reachable publicly and from a docker container
+                    //
+                    // sourcegraph.internal.sourcegraphURL.toString()
+                    'https://sourcegraph.com'
                 )
                 if (settings['python.accessToken']) {
-                    zipUrl.username = settings['python.accessToken']
+                    // TODO!(sqs): disable while we are using sourcegraph.com
+                    //
+                    // zipUrl.username = settings['python.accessToken']
                 }
                 zipUrl.pathname = `/${repo}@${rev}/-/raw`
 
