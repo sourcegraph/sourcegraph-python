@@ -1,5 +1,5 @@
 // tslint:disable-next-line:rxjs-no-wholesale
-import { combineLatest, Observable } from 'rxjs'
+import { combineLatest, Observable, Subject } from 'rxjs'
 import { map, startWith, tap } from 'rxjs/operators'
 import * as sourcegraph from 'sourcegraph'
 import * as rpc from 'vscode-jsonrpc'
@@ -36,6 +36,28 @@ function fromSubscribable<T>(sub: {
 export async function activate(): Promise<void> {
     // HACK: work around configuration not being synchronously available
     await new Promise(resolve => setTimeout(resolve, 100))
+
+    // HACK: work around https://github.com/sourcegraph/sourcegraph/pull/991 not yet being merged/deployed
+    if (!sourcegraph.workspace.roots) {
+        if (
+            sourcegraph.app.activeWindow &&
+            sourcegraph.app.activeWindow.visibleViewComponents.length > 0
+        ) {
+            const doc =
+                sourcegraph.app.activeWindow.visibleViewComponents[0].document
+            ;(sourcegraph.workspace as any).roots = [
+                { uri: new sourcegraph.URI(doc.uri.replace(/#.*$/, '')) },
+            ]
+            ;(sourcegraph.workspace as any).onDidChangeRoots = new Subject<
+                void
+            >()
+        } else {
+            console.error(
+                'Python extension is existing because https://github.com/sourcegraph/sourcegraph/pull/991 is not yet merged and there is no active document to hack around the lack of the workspace roots API.'
+            )
+            return
+        }
+    }
 
     const languageServerUrl = sourcegraph.configuration.get<Settings>().value[
         'python.languageServer.url'
