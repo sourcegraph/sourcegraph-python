@@ -65,7 +65,14 @@ export class LanguageServerConnectionManager implements Unsubscribable {
 
                     for (const { uri } of roots) {
                         // It is safe to not handle the promise here, because all callers to getConnection will handle it.
-                        this.findOrCreateEntry(uri.toString())
+                        try {
+                            this.findOrCreateEntry(uri.toString())
+                        } catch (err) {
+                            console.error(
+                                `Error connecting to language server for ${uri.toString()}:`,
+                                err
+                            )
+                        }
                     }
                 })
         )
@@ -142,6 +149,7 @@ export class LanguageServerConnectionManager implements Unsubscribable {
             ).then(({ reader, writer }) => {
                 const c = rpc.createMessageConnection(reader, writer)
                 c.listen()
+                c.onClose(() => this.removeEntry(rootUri))
                 return initialize(c).then(({ rootUri: actualRootUri }) =>
                     this.prepareConn(rootUri, actualRootUri, c).then(() => ({
                         connection: c,

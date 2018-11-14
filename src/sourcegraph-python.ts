@@ -20,7 +20,10 @@ import {
 import { createUriConverter, UriConverter } from './converters'
 import { LanguageServerConnectionManager } from './lsp'
 
-const ADDR = 'ws://localhost:4288'
+interface Settings {
+    ['python.languageServer.url']?: string
+    ['python.accessToken']?: string
+}
 
 function fromSubscribable<T>(sub: {
     subscribe(next: (value?: T) => void): sourcegraph.Unsubscribable
@@ -31,6 +34,21 @@ function fromSubscribable<T>(sub: {
 }
 
 export async function activate(): Promise<void> {
+    // HACK: work around configuration not being synchronously available
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    const languageServerUrl = sourcegraph.configuration.get<Settings>().value[
+        'python.languageServer.url'
+    ]
+    if (!languageServerUrl) {
+        if (sourcegraph.app.activeWindow) {
+            sourcegraph.app.activeWindow.showNotification(
+                'Configure `python.languageServer.url` in user settings for Python code intelligence.\n\n[Documentation](/extensions/sourcegraph/python)'
+            )
+        }
+        return
+    }
+
     const connectionManager = new LanguageServerConnectionManager(
         fromSubscribable(sourcegraph.workspace.onDidChangeRoots).pipe(
             // Only startWith a root if there are roots. Otherwise, there is no need to start, because when a root
@@ -38,18 +56,29 @@ export async function activate(): Promise<void> {
             sourcegraph.workspace.roots.length > 0 ? startWith(void 0) : tap(),
             map(() => sourcegraph.workspace.roots)
         ),
-        async (originalRootUri, _actualRootUri, conn) => {
-            console.log('AAAAAAAAa')
-            await conn.sendRequest(ExecuteCommandRequest.type, {
-                command: 'workspace/extractArchive',
-                arguments: [
-                    'https://codeload.github.com/pallets/flask/zip/339419117fff06fa89124d04b1921b61b8865d80',
-                    true,
-                ],
-            } as ExecuteCommandParams)
-            console.log('BBBBBBBBBBB')
+        async (originalRootUriStr, _actualRootUri, conn) => {
+            if (originalRootUriStr) {
+                const originalRootUri = new URL(originalRootUriStr)
+                const repo = `${originalRootUri.host}${
+                    originalRootUri.pathname
+                }`.replace(/^\/\//, '')
+                const rev = originalRootUri.search.slice(1) // remove leading '?'
 
-            const prefix = `${originalRootUri}: `
+                const settings = sourcegraph.configuration.get<Settings>().value
+                const zipUrl = new URL(
+                    sourcegraph.internal.sourcegraphURL.toString()
+                )
+                if (settings['python.accessToken']) {
+                    zipUrl.username = settings['python.accessToken']
+                }
+                zipUrl.pathname = `/${repo}@${rev}/-/raw`
+
+                await conn.sendRequest(ExecuteCommandRequest.type, {
+                    command: 'workspace/extractArchive',
+                    arguments: [zipUrl.toString(), true],
+                } as ExecuteCommandParams)
+            }
+            const prefix = `${originalRootUriStr || '(no root)'}: `
             conn.onNotification(LogMessageNotification.type, params =>
                 console.info(prefix + params.message)
             )
@@ -61,7 +90,7 @@ export async function activate(): Promise<void> {
                 )
             )
         },
-        ADDR
+        languageServerUrl
     )
 
     // Watch configuration.
