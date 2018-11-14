@@ -107,9 +107,9 @@ export async function activate(): Promise<void> {
         connectionManager.connections
     )
         .pipe(
-            map(([, bbb]) => ({
+            map(([, connections]) => ({
                 config: sourcegraph.configuration.get().value,
-                connections: bbb,
+                connections,
             }))
         )
         .subscribe(({ config, connections }) => {
@@ -211,7 +211,7 @@ export async function activate(): Promise<void> {
             return response
                 ? Array.isArray(response)
                     ? response.map(loc => ({
-                          uri: sourcegraph.URI.parse(
+                          uri: new sourcegraph.URI(
                               uriConverter.toClient(loc.uri)
                           ),
                           range: new sourcegraph.Range(
@@ -246,9 +246,7 @@ export async function activate(): Promise<void> {
             )
             return response
                 ? response.map(loc => ({
-                      uri: sourcegraph.URI.parse(
-                          uriConverter.toClient(loc.uri)
-                      ),
+                      uri: new sourcegraph.URI(uriConverter.toClient(loc.uri)),
                       range: new sourcegraph.Range(
                           loc.range.start.line,
                           loc.range.start.character,
