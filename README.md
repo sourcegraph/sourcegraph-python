@@ -1,6 +1,5 @@
-# sourcegraph-python
+# Python (WIP)
 
-## C# virtual file system libs
+This extension adds Python support to Sourcegraph using the [Python language server](https://github.com/Microsoft/python-language-server).
 
--   https://github.com/xoofx/zio
--   https://github.com/platformdotnet/Platform.VirtualFileSystem/
+Status: WIP
