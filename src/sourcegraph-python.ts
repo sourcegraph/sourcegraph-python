@@ -64,8 +64,9 @@ export async function activate(): Promise<void> {
     ]
     if (!languageServerUrl) {
         if (sourcegraph.app.activeWindow) {
+            // TODO!(sqs): update url when published as sourcegraph
             sourcegraph.app.activeWindow.showNotification(
-                'Configure `python.languageServer.url` in user settings for Python code intelligence.\n\n[Documentation](/extensions/sourcegraph/python)'
+                'Configure `python.languageServer.url` in user settings for Python code intelligence.\n\n[Documentation](/extensions/sqs/python)'
             )
         }
         return
