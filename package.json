@@ -15,10 +15,6 @@
     "configuration": {
       "title": "Python settings",
       "properties": {
-        "python.accessToken": {
-          "description": "A Sourcegraph access token used by the language server to fetch file contents. Required (unless the Sourcegraph instance is publicly accessible).",
-          "type": "string"
-        },
         "python.languageServer.url": {
           "description": "The URL to the Python language server (which is an instance of https://github.com/sourcegraph/python-language-server).",
           "type": "string",
