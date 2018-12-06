@@ -4403,7 +4403,7 @@ rxjs-tslint-rules@^4.2.0:
     tslib "^1.8.0"
     tsutils "^3.0.0"
 
-rxjs@^6.3.2, rxjs@^6.3.3:
+rxjs@^6.3.3:
   version "6.3.3"
   resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.3.3.tgz#3c6a7fa420e844a81390fb1158a9ec614f4bad55"
   integrity sha512-JTWmoY9tWCs7zvIk/CvRjhjGaOd+OVBM987mxFo+OW66cGpdKjZcpmc74ES1sB//7Kl/PAe8+wEakuhG4pcgOw==
@@ -4629,13 +4629,10 @@ source-map@^0.5.0, source-map@^0.5.3, source-map@^0.5.6:
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.5.7.tgz#8a039d2d1021d22d1ea14c80d8ea468ba2ef3fcc"
   integrity sha1-igOdLRAh0i0eoUyA2OpGi6LvP8w=
 
-sourcegraph@^18.0.1:
-  version "18.0.1"
-  resolved "https://registry.yarnpkg.com/sourcegraph/-/sourcegraph-18.0.1.tgz#7e741c1521337cb799fc0f8f1ecc6dd8158aa504"
-  integrity sha512-fhrbx6v0s0sAcdiO5VoxI/es0bhTy5npksT+EHENUj94L2KcRj39qlH4RYwutZgn7K/dirnX7tso/H9K9+c0Lw==
-  dependencies:
-    minimatch "^3.0.4"
-    rxjs "^6.3.2"
+sourcegraph@^19.4.0:
+  version "19.4.0"
+  resolved "https://registry.yarnpkg.com/sourcegraph/-/sourcegraph-19.4.0.tgz#5e02146ef06a5a3b0e37d1f09375bbfa011ddee8"
+  integrity sha512-fyx0nFtySTdn+Y1JR7LPdl2lj9vHCbSgoLjzMEW5iuBjVuVHXdVldq3kjBYoI98MI6L53qATT993sDVrq4Jqwg==
 
 split-string@^3.0.1, split-string@^3.0.2:
   version "3.1.0"

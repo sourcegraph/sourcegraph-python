@@ -1,5 +1,5 @@
 // tslint:disable-next-line:rxjs-no-wholesale
-import { combineLatest, Observable, Subject } from 'rxjs'
+import { combineLatest, concat, from, Observable, of, Subject } from 'rxjs'
 import { map, startWith, tap } from 'rxjs/operators'
 import * as sourcegraph from 'sourcegraph'
 import * as rpc from 'vscode-jsonrpc'
@@ -33,32 +33,10 @@ function fromSubscribable<T>(sub: {
     )
 }
 
-export async function activate(): Promise<void> {
-    // HACK: work around configuration not being synchronously available
-    await new Promise(resolve => setTimeout(resolve, 100))
+// No-op for Sourcegraph versions prior to 3.0-preview
+const DUMMY_CTX = { subscriptions: { add: (_unsubscribable: any) => void 0 } }
 
-    // HACK: work around https://github.com/sourcegraph/sourcegraph/pull/991 not yet being merged/deployed
-    if (!sourcegraph.workspace.roots) {
-        if (
-            sourcegraph.app.activeWindow &&
-            sourcegraph.app.activeWindow.visibleViewComponents.length > 0
-        ) {
-            const doc =
-                sourcegraph.app.activeWindow.visibleViewComponents[0].document
-            ;(sourcegraph.workspace as any).roots = [
-                { uri: new sourcegraph.URI(doc.uri.replace(/#.*$/, '')) },
-            ]
-            ;(sourcegraph.workspace as any).onDidChangeRoots = new Subject<
-                void
-            >()
-        } else {
-            console.error(
-                'Python extension is existing because https://github.com/sourcegraph/sourcegraph/pull/991 is not yet merged and there is no active document to hack around the lack of the workspace roots API.'
-            )
-            return
-        }
-    }
-
+export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
     const languageServerUrl = sourcegraph.configuration.get<Settings>().value[
         'python.languageServer.url'
     ]
@@ -73,7 +51,7 @@ export async function activate(): Promise<void> {
     }
 
     const connectionManager = new LanguageServerConnectionManager(
-        fromSubscribable(sourcegraph.workspace.onDidChangeRoots).pipe(
+        from(sourcegraph.workspace.onDidChangeRoots).pipe(
             // Only startWith a root if there are roots. Otherwise, there is no need to start, because when a root
             // is present, the observable will emit.
             sourcegraph.workspace.roots.length > 0 ? startWith(void 0) : tap(),
@@ -89,10 +67,7 @@ export async function activate(): Promise<void> {
 
                 const settings = sourcegraph.configuration.get<Settings>().value
                 const zipUrl = new URL(
-                    // TODO!(sqs): use sourcegraph.com bc it is reachable publicly and from a docker container
-                    //
-                    // sourcegraph.internal.sourcegraphURL.toString()
-                    'https://sourcegraph.com'
+                    sourcegraph.internal.sourcegraphURL.toString()
                 )
                 if (settings['python.accessToken']) {
                     // TODO!(sqs): disable while we are using sourcegraph.com
@@ -103,7 +78,7 @@ export async function activate(): Promise<void> {
 
                 await conn.sendRequest(ExecuteCommandRequest.type, {
                     command: 'workspace/extractArchive',
-                    arguments: [zipUrl.toString(), true],
+                    arguments: [zipUrl.toString(), false],
                 } as ExecuteCommandParams)
             }
             const prefix = `${originalRootUriStr || '(no root)'}: `
@@ -178,7 +153,10 @@ export async function activate(): Promise<void> {
             }))
     }
 
-    sourcegraph.workspace.onDidOpenTextDocument.subscribe(async doc => {
+    concat(
+        ...sourcegraph.workspace.textDocuments.map(doc => of(doc)),
+        from(sourcegraph.workspace.onDidOpenTextDocument)
+    ).subscribe(async doc => {
         if (sourcegraph.workspace.roots.length === 0) {
             return
         }

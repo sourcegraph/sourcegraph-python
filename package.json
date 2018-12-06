@@ -4,7 +4,7 @@
   "description": "Python code intelligence",
   "publisher": "sqs",
   "activationEvents": [
-    "*"
+    "onLanguage:python"
   ],
   "contributes": {
     "actions": [],
@@ -48,7 +48,7 @@
     "@sourcegraph/tslint-config": "^12.0.0",
     "parcel-bundler": "^1.10.3",
     "prettier": "^1.14.3",
-    "sourcegraph": "^18.0.1",
+    "sourcegraph": "^19.4.0",
     "tslint": "^5.11.0",
     "tslint-language-service": "^0.9.9",
     "typescript": "^3.1.3"
