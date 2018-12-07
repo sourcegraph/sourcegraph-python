@@ -42,9 +42,13 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
     ]
     if (!languageServerUrl) {
         if (sourcegraph.app.activeWindow) {
-            // TODO!(sqs): update url when published as sourcegraph
+            const docURL = `${sourcegraph.internal.sourcegraphURL
+                .toString()
+                .replace(/\/$/, '')}/extensions/sourcegraph/python`
             sourcegraph.app.activeWindow.showNotification(
-                'Configure `python.languageServer.url` in user settings for Python code intelligence.\n\n[Documentation](/extensions/sqs/python)'
+                'Configure `python.languageServer.url` in user settings for Python code intelligence.\n\n[Documentation](' +
+                    docURL +
+                    ')'
             )
         }
         return
@@ -70,9 +74,7 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
                     sourcegraph.internal.sourcegraphURL.toString()
                 )
                 if (settings['python.accessToken']) {
-                    // TODO!(sqs): disable while we are using sourcegraph.com
-                    //
-                    // zipUrl.username = settings['python.accessToken']
+                    zipUrl.username = settings['python.accessToken']
                 }
                 zipUrl.pathname = `/${repo}@${rev}/-/raw`
 

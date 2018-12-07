@@ -1,17 +1,12 @@
 {
-  "name": "sourcegraph-python",
-  "title": "WIP: Python",
-  "description": "Python code intelligence",
-  "publisher": "sqs",
+  "name": "python",
+  "title": "Python",
+  "description": "Python code intelligence (using the Python language server)",
+  "publisher": "sourcegraph",
   "activationEvents": [
     "onLanguage:python"
   ],
   "contributes": {
-    "actions": [],
-    "menus": {
-      "editor/title": [],
-      "commandPalette": []
-    },
     "configuration": {
       "title": "Python settings",
       "properties": {
