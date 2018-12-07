@@ -50,7 +50,7 @@ export class LanguageServerConnectionManager implements Unsubscribable {
             from(roots)
                 .pipe(
                     startWith([] as sourcegraph.WorkspaceRoot[]),
-                    bufferCount(2)
+                    bufferCount(2, 1)
                 )
                 .subscribe(([prevRoots, roots]) => {
                     for (const prevRoot of prevRoots) {
@@ -104,7 +104,11 @@ export class LanguageServerConnectionManager implements Unsubscribable {
         this.removeEntry(rootUri)
         if (e) {
             e.connection
-                .then(c => c.dispose())
+                .then(async c => {
+                    await c.sendRequest('shutdown')
+                    c.sendNotification('exit')
+                    c.dispose()
+                })
                 .catch(err =>
                     console.error(
                         `Error disposing Python language server connection for ${JSON.stringify(
