@@ -1,7 +1,6 @@
 {
   "name": "python",
-  "title": "Python",
-  "description": "Python code intelligence (using the Python language server)",
+  "description": "Python code intelligence",
   "publisher": "sourcegraph",
   "activationEvents": [
     "onLanguage:python"
@@ -10,6 +9,9 @@
     "type": "git",
     "url": "https://github.com/sourcegraph/sourcegraph-python"
   },
+  "wip": true,
+  "categories": ["Programming languages"],
+  "tags": ["python", "language-server"],
   "contributes": {
     "configuration": {
       "title": "Python settings",
