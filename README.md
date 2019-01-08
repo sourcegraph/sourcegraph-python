@@ -14,7 +14,22 @@ For Python code viewed on [Sourcegraph](https://sourcegraph.com) and when using 
 -   Go to definition
 -   Find references
 
-## Usage
+## Usage on your own Sourcegraph instance
+
+Run the language server:
+
+- Check out https://github.com/sourcegraph/python-language-server/tree/wip2 locally
+- Run `make docker`
+- Run `make run-docker` (it will listen on port 4288)
+
+Add the address to your Python language server and an access token (for private repositories) to your Sourcegraph settings:
+
+```
+  "python.languageServer.url": "ws://localhost:4288",
+  "python.accessToken": "*****",
+```
+
+## Usage on Sourcegraph.com
 
 This extension is enabled for all users by default on Sourcegraph.com and when using the [Sourcegraph browser extension](https://docs.sourcegraph.com/integration/browser_extension) on public code.
 
