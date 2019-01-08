@@ -16,7 +16,7 @@ For Python code viewed on [Sourcegraph](https://sourcegraph.com) and when using 
 
 ## Usage on your own Sourcegraph instance
 
-Run the language server:
+Run the language server (@chrismwendt will deploy this to to hub.docker.com soon):
 
 - Check out https://github.com/sourcegraph/python-language-server/tree/wip2 locally
 - Make sure you have `dotnet` installed (e.g. instructions for macOS http://www.joshka.net/2016/08/installing-dotnet-osx)
