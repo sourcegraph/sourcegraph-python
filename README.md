@@ -19,6 +19,7 @@ For Python code viewed on [Sourcegraph](https://sourcegraph.com) and when using 
 Run the language server:
 
 - Check out https://github.com/sourcegraph/python-language-server/tree/wip2 locally
+- Make sure you have `dotnet` installed (e.g. instructions for macOS http://www.joshka.net/2016/08/installing-dotnet-osx)
 - Run `make docker`
 - Run `make run-docker` (it will listen on port 4288)
 
