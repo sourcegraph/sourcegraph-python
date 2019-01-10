@@ -31,6 +31,8 @@ Add these to your Sourcegraph settings:
   "python.sourcegraph.url": "http://host.docker.internal:7080",
 ```
 
+If you're running on Linux, change `go.sourcegraphUrl` to TODO(@chrismwendt) ask @beyang what URL works.
+
 ## Usage on Sourcegraph.com
 
 This extension is enabled for all users by default on Sourcegraph.com and when using the [Sourcegraph browser extension](https://docs.sourcegraph.com/integration/browser_extension) on public code.
