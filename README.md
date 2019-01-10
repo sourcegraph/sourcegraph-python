@@ -31,7 +31,11 @@ Add these to your Sourcegraph settings:
   "python.sourcegraph.url": "http://host.docker.internal:7080",
 ```
 
-If you're running on Linux, change `go.sourcegraphUrl` to TODO(@chrismwendt) ask @beyang what URL works.
+If you're running on Linux, change `go.sourcegraphUrl` to the IP given by:
+
+```bash
+ip addr show docker0 | grep -Po 'inet \K[\d.]+'
+```
 
 ## Usage on Sourcegraph.com
 
