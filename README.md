@@ -16,18 +16,17 @@ For Python code viewed on [Sourcegraph](https://sourcegraph.com) and when using 
 
 ## Usage on your own Sourcegraph instance
 
-Run the language server (@chrismwendt will deploy this to to hub.docker.com soon):
+Run the language server Docker container:
 
-- Check out https://github.com/sourcegraph/python-language-server/tree/wip2 locally
-- Make sure you have `dotnet` installed (e.g. instructions for macOS http://www.joshka.net/2016/08/installing-dotnet-osx)
-- Run `make docker`
-- Run `make run-docker` (it will listen on port 4288)
+```
+docker run --rm -p 4288:4288 sourcegraph/lang-python:insiders
+```
 
-Add the address to your Python language server and an access token (for private repositories) to your Sourcegraph settings:
+Add these to your Sourcegraph settings:
 
 ```
   "python.languageServer.url": "ws://localhost:4288",
-  "python.accessToken": "*****",
+  "python.sourcegraph.url": "http://host.docker.internal:7080",
 ```
 
 ## Usage on Sourcegraph.com

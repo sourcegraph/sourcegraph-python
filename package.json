@@ -10,8 +10,13 @@
     "url": "https://github.com/sourcegraph/sourcegraph-python"
   },
   "wip": true,
-  "categories": ["Programming languages"],
-  "tags": ["python", "language-server"],
+  "categories": [
+    "Programming languages"
+  ],
+  "tags": [
+    "python",
+    "language-server"
+  ],
   "contributes": {
     "configuration": {
       "title": "Python settings",
@@ -57,6 +62,7 @@
   "dependencies": {
     "@types/ws": "^6.0.1",
     "rxjs": "^6.3.3",
+    "tagged-template-noop": "^2.1.0",
     "vscode-jsonrpc": "^4.0.0",
     "vscode-languageserver-protocol": "^3.13.0",
     "vscode-ws-jsonrpc": "^0.0.3",

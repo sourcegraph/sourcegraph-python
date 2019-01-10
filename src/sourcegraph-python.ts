@@ -17,13 +17,9 @@ import {
     ReferencesRequest,
     TextDocumentPositionParams,
 } from 'vscode-languageserver-protocol'
+import { getOrTryToCreateAccessToken } from './access-token'
 import { createUriConverter, UriConverter } from './converters'
 import { LanguageServerConnectionManager } from './lsp'
-
-interface Settings {
-    ['python.languageServer.url']?: string
-    ['python.accessToken']?: string
-}
 
 function fromSubscribable<T>(sub: {
     subscribe(next: (value?: T) => void): sourcegraph.Unsubscribable
@@ -71,10 +67,12 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
 
                 const settings = sourcegraph.configuration.get<Settings>().value
                 const zipUrl = new URL(
-                    sourcegraph.internal.sourcegraphURL.toString()
+                    settings['python.sourcegraph.url'] ||
+                        sourcegraph.internal.sourcegraphURL.toString()
                 )
-                if (settings['python.accessToken']) {
-                    zipUrl.username = settings['python.accessToken']
+                const accessToken = await getOrTryToCreateAccessToken()
+                if (accessToken) {
+                    zipUrl.username = accessToken
                 }
                 zipUrl.pathname = `/${repo}@${rev}/-/raw`
 
