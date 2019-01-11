@@ -234,7 +234,11 @@ async function initialize(
             typeStubSearchPaths: ['/usr/local/python-language-server/Typeshed'],
             excludeFiles: [],
             analysisUpdates: true,
-            traceLogging: true,
+            traceLogging: Boolean(
+                sourcegraph.configuration
+                    .get<Settings>()
+                    .get('python.traceLogging') || false
+            ),
             asyncStartup: true,
         },
     } as InitializeParams)
