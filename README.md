@@ -54,3 +54,4 @@ To use it, just visit a Python file and hover over tokens. Examples:
 
 -   Dependencies are not installed. Hovers, definitions, and references only work for sources checked into the single repository you are viewing.
 -   Cross-repository definitions and references are not yet supported.
+-   Hangs on very large repositories (e.g. django/django)
