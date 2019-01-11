@@ -1,6 +1,6 @@
 # Python
 
-![](sample.png)
+![](https://user-images.githubusercontent.com/1387653/51012886-6a645400-1514-11e9-8958-8ebe3e40aff9.png)
 
 This extension adds Python code intelligence to Sourcegraph using a [Python language server](https://github.com/Microsoft/python-language-server) (the [@sourcegraph fork](https://github.com/sourcegraph/python-language-server/tree/wip2)).
 
