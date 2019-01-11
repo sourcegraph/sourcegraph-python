@@ -1,6 +1,6 @@
 {
   "name": "python",
-  "description": "Python code intelligence",
+  "description": "Python code intelligence (beta)",
   "publisher": "sourcegraph",
   "activationEvents": [
     "onLanguage:python"
