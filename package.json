@@ -9,7 +9,6 @@
     "type": "git",
     "url": "https://github.com/sourcegraph/sourcegraph-python"
   },
-  "wip": true,
   "categories": [
     "Programming languages"
   ],
