@@ -50,10 +50,6 @@ To use it, just visit a Python file and hover over tokens. Examples:
 
 ![Screenshot](https://user-images.githubusercontent.com/1976/49628952-d4c92800-f99b-11e8-9605-d880b733cde6.png)
 
-### On self-hosted Sourcegraph instances
-
-_Documentation to be added soon._
-
 ## Known issues
 
 -   Dependencies are not installed. Hovers, definitions, and references only work for sources checked into the single repository you are viewing.
