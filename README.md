@@ -4,7 +4,7 @@
 
 This extension adds Python code intelligence to Sourcegraph using a [Python language server](https://github.com/Microsoft/python-language-server) (the [@sourcegraph fork](https://github.com/sourcegraph/python-language-server/tree/wip2)).
 
-[**🗃️ Source code**](https://github.com/sourcegraph/sourcegraph-python)
+[**🗃️ Source code**](https://github.com/sourcegraph/lang-python)
 
 [**➕ View in extension registry**](https://sourcegraph.com/extensions/sourcegraph/python)
 
