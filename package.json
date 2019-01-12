@@ -20,7 +20,7 @@
     "configuration": {
       "title": "Python settings",
       "properties": {
-        "python.languageServer.url": {
+        "python.serverUrl": {
           "description": "The URL to the Python language server (which is an instance of https://github.com/sourcegraph/python-language-server).",
           "type": "string",
           "format": "uri",

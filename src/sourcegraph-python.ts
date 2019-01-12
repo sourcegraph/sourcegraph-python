@@ -34,7 +34,7 @@ const DUMMY_CTX = { subscriptions: { add: (_unsubscribable: any) => void 0 } }
 
 export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
     const languageServerUrl = sourcegraph.configuration.get<Settings>().value[
-        'python.languageServer.url'
+        'python.serverUrl'
     ]
     if (!languageServerUrl) {
         if (sourcegraph.app.activeWindow) {
@@ -42,7 +42,7 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
                 .toString()
                 .replace(/\/$/, '')}/extensions/sourcegraph/python`
             sourcegraph.app.activeWindow.showNotification(
-                'Configure `python.languageServer.url` in user settings for Python code intelligence.\n\n[Documentation](' +
+                'Configure `python.serverUrl` in user settings for Python code intelligence.\n\n[Documentation](' +
                     docURL +
                     ')'
             )
@@ -67,7 +67,7 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
 
                 const settings = sourcegraph.configuration.get<Settings>().value
                 const zipUrl = new URL(
-                    settings['python.sourcegraph.url'] ||
+                    settings['python.sourcegraphUrl'] ||
                         sourcegraph.internal.sourcegraphURL.toString()
                 )
                 const accessToken = await getOrTryToCreateAccessToken()

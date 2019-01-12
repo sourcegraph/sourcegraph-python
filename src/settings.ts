@@ -1,6 +1,6 @@
 interface Settings {
-    ['python.languageServer.url']?: string
+    ['python.serverUrl']?: string
     ['python.accessToken']?: string
-    ['python.sourcegraph.url']?: string
+    ['python.sourcegraphUrl']?: string
     ['python.traceLogging']?: boolean
 }

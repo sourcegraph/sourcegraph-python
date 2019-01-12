@@ -31,11 +31,11 @@ Docker image `sourcegraph/lang-python` from Docker Hub.
 1. Add these to your Sourcegraph settings:
 
     ```json
-      "python.languageServer.url": "ws://localhost:4288",
-      "python.sourcegraph.url": "http://host.docker.internal:7080",
+      "python.serverUrl": "ws://localhost:4288",
+      "python.sourcegraphUrl": "http://host.docker.internal:7080",
     ```
 
-    If you're running on Linux, change `python.sourcegraph.url` to the IP given by:
+    If you're running on Linux, change `python.sourcegraphUrl` to the IP given by:
 
     ```bash
     ip addr show docker0 | grep -Po 'inet \K[\d.]+'
