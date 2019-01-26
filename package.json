@@ -7,7 +7,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/sourcegraph/lang-python"
+    "url": "https://github.com/sourcegraph/sourcegraph-python"
   },
   "categories": [
     "Programming languages"
