@@ -1,3 +1,4 @@
+import { activateOnFileExts as activateBasicCodeIntelOnFileExts } from '@sourcegraph/basic-code-intel'
 // tslint:disable-next-line:rxjs-no-wholesale
 import { combineLatest, concat, from, Observable, of, Subject } from 'rxjs'
 import { map, startWith, tap } from 'rxjs/operators'
@@ -41,13 +42,12 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
             const docURL = `${sourcegraph.internal.sourcegraphURL
                 .toString()
                 .replace(/\/$/, '')}/extensions/sourcegraph/python`
-            sourcegraph.app.activeWindow.showNotification(
-                'Configure `python.serverUrl` in user settings for Python code intelligence.\n\n[Documentation](' +
-                    docURL +
-                    ')'
+            console.log(
+                'Configure `python.serverUrl` in user settings for more accurate Python code intelligence.',
+                docURL
             )
         }
-        return
+        return activateBasicCodeIntelOnFileExts(['py'])(ctx)
     }
 
     const connectionManager = new LanguageServerConnectionManager(
