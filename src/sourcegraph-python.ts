@@ -1,4 +1,4 @@
-import { activateOnFileExts as activateBasicCodeIntelOnFileExts } from '@sourcegraph/basic-code-intel'
+import { activateBasicCodeIntel } from '@sourcegraph/basic-code-intel'
 // tslint:disable-next-line:rxjs-no-wholesale
 import { combineLatest, concat, from, Observable, of, Subject } from 'rxjs'
 import { map, startWith, tap } from 'rxjs/operators'
@@ -47,7 +47,10 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
                 docURL
             )
         }
-        return activateBasicCodeIntelOnFileExts(['py'])(ctx)
+        return activateBasicCodeIntel({
+            fileExts: ['py'],
+            definitionPatterns: ['\\b%s\\b='],
+        })(ctx)
     }
 
     const connectionManager = new LanguageServerConnectionManager(
