@@ -734,12 +734,13 @@
   dependencies:
     esquery "^1.0.1"
 
-"@sourcegraph/basic-code-intel@3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@sourcegraph/basic-code-intel/-/basic-code-intel-3.0.0.tgz#b3c6c236727e35a58f19db1990090efbc1dfc3f9"
-  integrity sha512-5paXvKtDzYaggc22BvtCFSir4ie7p38XOHJFCBvUPel7cmzzXAlHZRngfFr09Md1oOZllekrLxDduOT1EMwx9A==
+"@sourcegraph/basic-code-intel@4.0.2":
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/@sourcegraph/basic-code-intel/-/basic-code-intel-4.0.2.tgz#97d2e591c654be6d83a7f48b284728569c6007cb"
+  integrity sha512-qQApeG29cc6EnbYlxAHKtiTCWi30WVDObO+B07MlvRf9s4dlGu2F/pwjUnS/NqO4j35gGOnlJMEyCPp2u2xB9g==
   dependencies:
     rxjs "^6.3.3"
+    sourcegraph "^20.1.0"
 
 "@sourcegraph/tsconfig@^3.0.0":
   version "3.0.0"
@@ -4640,6 +4641,11 @@ sourcegraph@^19.4.0:
   version "19.4.0"
   resolved "https://registry.yarnpkg.com/sourcegraph/-/sourcegraph-19.4.0.tgz#5e02146ef06a5a3b0e37d1f09375bbfa011ddee8"
   integrity sha512-fyx0nFtySTdn+Y1JR7LPdl2lj9vHCbSgoLjzMEW5iuBjVuVHXdVldq3kjBYoI98MI6L53qATT993sDVrq4Jqwg==
+
+sourcegraph@^20.1.0:
+  version "20.1.0"
+  resolved "https://registry.yarnpkg.com/sourcegraph/-/sourcegraph-20.1.0.tgz#9ba6c0e57107b1fe66c4299db32c7780094398cc"
+  integrity sha512-zbpDsFtExHQ04eJvQ2IIoi1rWrJU7Uhw4wXoy7V9Xpj/qMgbNnV4dev1kDg24y6F9vXM+jSONRrVcg/EO/UMag==
 
 split-string@^3.0.1, split-string@^3.0.2:
   version "3.1.0"
