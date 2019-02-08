@@ -50,6 +50,15 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
         return activateBasicCodeIntel({
             fileExts: ['py'],
             definitionPatterns: ['\\b%s\\b='],
+            commentStyle: {
+                docPlacement: 'below the definition',
+                lineRegex: /#\s*(.*)/,
+                block: {
+                    startRegex: /"""/,
+                    contentRegex: /^\s*(.*)/,
+                    endRegex: /"""/,
+                },
+            },
         })(ctx)
     }
 
