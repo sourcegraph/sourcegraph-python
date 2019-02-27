@@ -40,7 +40,8 @@
     "serve": "parcel serve --no-hmr --out-file sourcegraph-python.js src/sourcegraph-python.ts",
     "watch:typecheck": "tsc -p tsconfig.json -w",
     "watch:build": "tsc -p tsconfig.dist.json -w",
-    "sourcegraph:prepublish": "npm run build"
+    "hascleantree": "! ls -l node_modules/ node_modules/@* | grep \"^l\" && git diff-index --quiet HEAD --",
+    "sourcegraph:prepublish": "npm run hascleantree && npm run build"
   },
   "browserslist": [
     "last 1 Chrome versions",
