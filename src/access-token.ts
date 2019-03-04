@@ -40,7 +40,7 @@ async function userHasAccessTokenWithNote(note: string): Promise<boolean> {
     }
     if (
         response.currentUser.accessTokens.pageInfo &&
-        response.currentUser.accessTokens.pageInfo.hasNextPage === true
+        response.currentUser.accessTokens.pageInfo.hasNextPage
     ) {
         throw new Error('You have too many access tokens (over 1000).')
     }
