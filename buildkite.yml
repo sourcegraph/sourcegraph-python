@@ -9,7 +9,7 @@ steps:
       yarn run tslint
       yarn run typecheck
       yarn run build
-    label: ':go:'
+    label: ':python:'
 
   - wait
 
