@@ -34,6 +34,7 @@
   "main": "dist/sourcegraph-python.js",
   "scripts": {
     "prettier": "prettier '**/*.{js?(on),ts}' --write --list-different",
+    "prettier-check": "npm run prettier -- --write=false",
     "tslint": "tslint -p tsconfig.json './src/**/*.ts'",
     "typecheck": "tsc -p tsconfig.json",
     "build": "parcel build --out-file dist/sourcegraph-python.js src/sourcegraph-python.ts",
