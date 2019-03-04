@@ -1,8 +1,9 @@
 import { activateBasicCodeIntel } from '@sourcegraph/basic-code-intel'
 // tslint:disable-next-line:rxjs-no-wholesale
-import { combineLatest, concat, from, Observable, of, Subject } from 'rxjs'
+import { combineLatest, concat, from, Observable, of } from 'rxjs'
 import { map, startWith, tap } from 'rxjs/operators'
 import * as sourcegraph from 'sourcegraph'
+import { Position, ReferenceContext, TextDocument } from 'sourcegraph'
 import * as rpc from 'vscode-jsonrpc'
 import {
     DefinitionRequest,
@@ -184,7 +185,7 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
     })
 
     sourcegraph.languages.registerHoverProvider(['python'], {
-        provideHover: async (doc, pos) => {
+        provideHover: async (doc: TextDocument, pos: Position) => {
             const { uriConverter, connection } = await getConnectionForDocument(
                 doc
             )
@@ -205,7 +206,7 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
     })
 
     sourcegraph.languages.registerDefinitionProvider(['python'], {
-        provideDefinition: async (doc, pos) => {
+        provideDefinition: async (doc: TextDocument, pos: Position) => {
             const { uriConverter, connection } = await getConnectionForDocument(
                 doc
             )
@@ -240,7 +241,11 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
     })
 
     sourcegraph.languages.registerReferenceProvider(['python'], {
-        provideReferences: async (doc, pos, context) => {
+        provideReferences: async (
+            doc: TextDocument,
+            pos: Position,
+            context: ReferenceContext
+        ) => {
             const { uriConverter, connection } = await getConnectionForDocument(
                 doc
             )
