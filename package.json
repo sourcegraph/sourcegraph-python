@@ -34,9 +34,6 @@
     "menus": {
       "panel/toolbar": [
         {
-          "action": "externalReferences.toggle"
-        },
-        {
           "action": "impreciseResults",
           "when": "isImprecise"
         }
