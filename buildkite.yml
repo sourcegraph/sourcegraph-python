@@ -20,3 +20,6 @@ steps:
     label: ':rocket:'
     concurrency: 1
     concurrency_group: deploy
+    
+  - label: ':lock: security - checkov'
+    command: .buildkite/ci-checkov.sh    
