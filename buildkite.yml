@@ -2,6 +2,9 @@ env:
   FORCE_COLOR: '1'
 
 steps:
+  - label: ':lock: security - checkov'
+    command: ./ci-checkov.sh    
+
   # Run tests
   - command: |-
       yarn
@@ -20,6 +23,3 @@ steps:
     label: ':rocket:'
     concurrency: 1
     concurrency_group: deploy
-    
-  - label: ':lock: security - checkov'
-    command: ./ci-checkov.sh    
