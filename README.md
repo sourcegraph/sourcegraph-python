@@ -5,7 +5,7 @@
 This extension provides Python code intelligence on Sourcegraph. Ensure this extension is enabled and then try it on some examples:
 
 -   Tensorflow: [tensorflow_ranking/examples/tf_ranking_libsvm.py](https://sourcegraph.com/github.com/tensorflow/ranking@931e4e18d68612d0b29dc3c81994acdd4b6ab743/-/blob/tensorflow_ranking/examples/tf_ranking_libsvm.py#L294:27&tab=references)
--   Flask: [flask/views.py](https://sourcegraph.com/github.com/pallets/flask/-/blob/flask/views.py)
+-   Flask: [flask/views.py](https://sourcegraph.com/github.com/pallets/flask/-/blob/src/flask/views.py)
 -   Zulip: [corporate/lib/stripe.py](https://sourcegraph.com/github.com/zulip/zulip/-/blob/corporate/lib/stripe.py)
 -   Trivial sample: [pkg0/m0.py](http://sourcegraph.com/github.com/sgtest/python-sample-0/-/blob/pkg0/m0.py)
 
