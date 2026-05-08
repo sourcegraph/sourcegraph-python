@@ -1,7 +1,15 @@
 import { activateBasicCodeIntel } from '@sourcegraph/basic-code-intel'
 // tslint:disable-next-line:rxjs-no-wholesale
-import { combineLatest, concat, from, Observable, of } from 'rxjs'
-import { map, startWith, tap } from 'rxjs/operators'
+import {
+    combineLatest,
+    concat,
+    from,
+    map,
+    Observable,
+    of,
+    startWith,
+    tap,
+} from 'rxjs'
 import * as sourcegraph from 'sourcegraph'
 import { Position, ReferenceContext, TextDocument } from 'sourcegraph'
 import * as rpc from 'vscode-jsonrpc'
