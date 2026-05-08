@@ -1,12 +1,14 @@
 // tslint:disable:rxjs-no-wholesale
 import {
     BehaviorSubject,
+    bufferCount,
     from,
+    map,
     Observable,
+    startWith,
     Subscribable,
     Subscription,
 } from 'rxjs'
-import { bufferCount, map, startWith } from 'rxjs/operators'
 import * as sourcegraph from 'sourcegraph'
 import { Unsubscribable } from 'sourcegraph'
 import * as rpc from 'vscode-jsonrpc'
