@@ -1,7 +1,15 @@
 import { activateBasicCodeIntel } from '@sourcegraph/basic-code-intel'
 // tslint:disable-next-line:rxjs-no-wholesale
-import { combineLatest, concat, from, Observable, of } from 'rxjs'
-import { map, startWith, tap } from 'rxjs/operators'
+import {
+    combineLatest,
+    concat,
+    from,
+    map,
+    Observable,
+    of,
+    startWith,
+    tap,
+} from 'rxjs'
 import * as sourcegraph from 'sourcegraph'
 import { Position, ReferenceContext, TextDocument } from 'sourcegraph'
 import * as rpc from 'vscode-jsonrpc'
@@ -157,10 +165,10 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
     //
     // The Python language server waits for the first workspace/didChangeConfiguration notification to start
     // pre-parsing files in the workspace.
-    combineLatest(
+    combineLatest([
         fromSubscribable<void>(sourcegraph.configuration),
-        connectionManager.connections
-    )
+        connectionManager.connections,
+    ])
         .pipe(
             map(([, connections]) => ({
                 config: sourcegraph.configuration.get().value,
