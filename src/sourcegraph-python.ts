@@ -157,10 +157,10 @@ export function activate(ctx: sourcegraph.ExtensionContext = DUMMY_CTX): void {
     //
     // The Python language server waits for the first workspace/didChangeConfiguration notification to start
     // pre-parsing files in the workspace.
-    combineLatest(
+    combineLatest([
         fromSubscribable<void>(sourcegraph.configuration),
-        connectionManager.connections
-    )
+        connectionManager.connections,
+    ])
         .pipe(
             map(([, connections]) => ({
                 config: sourcegraph.configuration.get().value,
